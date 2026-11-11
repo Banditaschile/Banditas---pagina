@@ -23,8 +23,21 @@
   pintarBolsa();
 
   // boletín
+  // Los correos se guardan en una planilla de Google (ver programa/boletin-google-sheets.gs).
+  var DESTINO_BOLETIN = '';
   var f = document.getElementById('form-boletin');
-  if (f) f.addEventListener('submit', function(e){ e.preventDefault(); document.getElementById('gracias').hidden = false; f.hidden = true; });
+  if (f) f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var listo = function(){ document.getElementById('gracias').hidden = false; f.hidden = true; };
+    if (DESTINO_BOLETIN.indexOf('https://') !== 0) { listo(); return; }
+    var boton = f.querySelector('button[type=submit]');
+    if (boton) boton.disabled = true;
+    var datos = new URLSearchParams({ correo: f.correo.value.trim(), pagina: location.pathname });
+    fetch(DESTINO_BOLETIN, { method: 'POST', mode: 'no-cors', body: datos }).then(listo, function(){
+      if (boton) boton.disabled = false;
+      alert('No pudimos guardar tu correo. Intenta de nuevo o escríbenos por WhatsApp.');
+    });
+  });
 
   // ficha: color cambia la foto, agregar a la bolsa
   var compra = document.getElementById('form-compra');

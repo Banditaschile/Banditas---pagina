@@ -77,6 +77,10 @@ ICONO_WSP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.8A
 # Vitrina (15-10): mientras Banditas no decida vender online, la página muestra y el pedido se cierra por WhatsApp.
 # Para volver a modo tienda (bolsa y carro, p. ej. al pasar a Shopify) basta con poner VITRINA = False.
 VITRINA = True
+
+# Dirección de la aplicación web de Google Apps Script que guarda los correos del boletín
+# (ver programa/boletin-google-sheets.gs). Si queda vacía, el formulario solo muestra el mensaje de gracias.
+BOLETIN_URL = ''
 ICONO_BOLSA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1 12H7z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>'
 ICONO_IG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4.5"/><circle cx="12" cy="12" r="3.6"/><circle cx="16.9" cy="7.1" r=".6"/></svg>'
 ICONO_MENU = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
@@ -547,8 +551,21 @@ SCRIPT = r'''
   pintarBolsa();
 
   // boletín
+  // Los correos se guardan en una planilla de Google (ver programa/boletin-google-sheets.gs).
+  var DESTINO_BOLETIN = '__BOLETIN_URL__';
   var f = document.getElementById('form-boletin');
-  if (f) f.addEventListener('submit', function(e){ e.preventDefault(); document.getElementById('gracias').hidden = false; f.hidden = true; });
+  if (f) f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var listo = function(){ document.getElementById('gracias').hidden = false; f.hidden = true; };
+    if (DESTINO_BOLETIN.indexOf('https://') !== 0) { listo(); return; }
+    var boton = f.querySelector('button[type=submit]');
+    if (boton) boton.disabled = true;
+    var datos = new URLSearchParams({ correo: f.correo.value.trim(), pagina: location.pathname });
+    fetch(DESTINO_BOLETIN, { method: 'POST', mode: 'no-cors', body: datos }).then(listo, function(){
+      if (boton) boton.disabled = false;
+      alert('No pudimos guardar tu correo. Intenta de nuevo o escríbenos por WhatsApp.');
+    });
+  });
 
   // ficha: color cambia la foto, agregar a la bolsa
   var compra = document.getElementById('form-compra');
@@ -709,7 +726,7 @@ def main():
     for nombre, contenido in paginas.items():
         contenido = re.sub(r'/img/([A-Za-z0-9._-]+)', version, contenido)
         (SITIO / nombre).write_text(contenido, encoding='utf-8')
-    (SITIO / 'sitio.js').write_text(SCRIPT, encoding='utf-8')
+    (SITIO / 'sitio.js').write_text(SCRIPT.replace('__BOLETIN_URL__', BOLETIN_URL), encoding='utf-8')
     (SITIO / 'favicon.svg').write_text(FAVICON, encoding='utf-8')
     (SITIO / '_headers').write_text('/img/*\n  Cache-Control: public, max-age=86400\n', encoding='utf-8')
     (SITIO / 'meta-catalogo.csv').write_text(catalogo_meta(productos), encoding='utf-8')

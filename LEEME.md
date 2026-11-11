@@ -44,3 +44,11 @@ Hasta el paso 7 la página sigue funcionando desde la cuenta de Javier, así que
 - WhatsApp de la página: +56 9 4967 0353 (está en `programa/construir.py`, variable `WSP`).
 - Dominio: banditas.cl, registrado en NIC Chile a nombre de The Blond SPA, pagado hasta el 12-10-2028.
 - La página está en **modo vitrina**: cada prenda se pide por WhatsApp. Para volver al modo tienda con carro, se cambia `VITRINA = True` por `VITRINA = False` en `programa/construir.py`.
+
+## Correos del boletín
+
+El formulario "Enterarme de lo nuevo" guarda los correos en una planilla de Google, en la pestaña **Suscriptoras** (fecha, correo y página desde donde se inscribió). No guarda correos repetidos.
+
+- El código que recibe los correos está en `programa/boletin-google-sheets.gs` y va pegado en la planilla (**Extensiones → Apps Script**).
+- La dirección de esa aplicación web está en `programa/construir.py`, en la variable `BOLETIN_URL`, y también en `pagina/sitio.js`, en `DESTINO_BOLETIN`.
+- Si esa dirección queda vacía, el formulario solo muestra el mensaje de gracias y no guarda nada.
